@@ -23,7 +23,8 @@ export default function Toaster() {
             {title && <ToastTitle>{title}</ToastTitle>}
             {description && <ToastDescription>{description}</ToastDescription>}
           </div>
-          {action && <ToastAction>{action}</ToastAction>}
+          
+          {action && <ToastAction altText="Close">{action}</ToastAction>}
           <ToastClose />
         </Toast>
       ))}

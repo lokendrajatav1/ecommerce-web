@@ -390,8 +390,11 @@ function ProductsTab() {
     price: "", 
     stock: "", 
     categoryId: "", 
-    description: "" 
+    description: "",
+    images: [] as string[],
   })
+  const [newImageUrl, setNewImageUrl] = useState("")
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchProducts()
@@ -455,7 +458,7 @@ function ProductsTab() {
           stock: Number.parseInt(formData.stock),
           categoryId: formData.categoryId,
           description: formData.description,
-          images: [],
+          images: formData.images || [],
         }),
       })
 
@@ -463,7 +466,7 @@ function ProductsTab() {
       if (data.success) {
         setShowForm(false)
         setEditingProduct(null)
-        setFormData({ name: "", price: "", stock: "", categoryId: "", description: "" })
+        setFormData({ name: "", price: "", stock: "", categoryId: "", description: "", images: [] })
         fetchProducts()
         toast({
           title: "Success",
@@ -528,6 +531,7 @@ function ProductsTab() {
       stock: product.stock.toString(),
       categoryId: product.categoryId,
       description: product.description || "",
+      images: (product.images || []).map((i: any) => i.url),
     })
     setShowForm(true)
   }
@@ -551,7 +555,7 @@ function ProductsTab() {
         <Button 
           onClick={() => {
             setEditingProduct(null)
-            setFormData({ name: "", price: "", stock: "", categoryId: "", description: "" })
+            setFormData({ name: "", price: "", stock: "", categoryId: "", description: "", images: [] })
             setShowForm(!showForm)
           }}
           className="flex items-center gap-2"
@@ -631,6 +635,78 @@ function ProductsTab() {
               />
             </div>
             
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="images">Images</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="imageUrl"
+                  type="text"
+                  placeholder="Image URL"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const url = newImageUrl.trim()
+                    if (!url) return
+                    setFormData({ ...formData, images: [...(formData.images || []), url] })
+                    setNewImageUrl("")
+                  }}
+                >
+                  Add
+                </Button>
+                <input
+                  id="file"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    try {
+                      setUploading(true)
+                      const fd = new FormData()
+                      fd.append("file", file)
+                      const res = await fetch("/api/uploads/cloudinary", { method: "POST", body: fd })
+                      const json = await res.json()
+                      if (json.success && json.url) {
+                        setFormData({ ...formData, images: [...(formData.images || []), json.url] })
+                        toast({ title: "Uploaded", description: "Image uploaded to Cloudinary." })
+                      } else {
+                        toast({ title: "Upload failed", description: json.error || "Failed to upload image.", variant: "destructive" })
+                      }
+                    } catch (err) {
+                      console.error("Upload error:", err)
+                      toast({ title: "Upload error", description: "Failed to upload image.", variant: "destructive" })
+                    } finally {
+                      setUploading(false)
+                      // reset input value so same file can be reselected if needed
+                      const fileInput = document.getElementById("file") as HTMLInputElement | null
+                      if (fileInput) {
+                        fileInput.value = ""
+                      }
+                    }
+                  }}
+                />
+                {uploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+              </div>
+
+              <div className="flex gap-2 flex-wrap mt-2">
+                {(formData.images || []).map((url, idx) => (
+                  <div key={`${url}-${idx}`} className="w-24 h-24 border rounded overflow-hidden relative">
+                    <img src={url} alt={`img-${idx}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, images: (formData.images || []).filter((_, i) => i !== idx) })}
+                      className="absolute top-1 right-1 text-sm text-white bg-black/50 rounded px-1"
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             <div className="md:col-span-2 flex gap-2">
               <Button type="submit">
                 {editingProduct ? "Update Product" : "Add Product"}
@@ -641,7 +717,7 @@ function ProductsTab() {
                 onClick={() => {
                   setShowForm(false)
                   setEditingProduct(null)
-                  setFormData({ name: "", price: "", stock: "", categoryId: "", description: "" })
+                  setFormData({ name: "", price: "", stock: "", categoryId: "", description: "", images: [] })
                 }}
               >
                 Cancel
@@ -657,6 +733,7 @@ function ProductsTab() {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
+                <th className="text-left p-4 font-medium">Image</th>
                 <th className="text-left p-4 font-medium">Name</th>
                 <th className="text-left p-4 font-medium">Category</th>
                 <th className="text-left p-4 font-medium">Price</th>
@@ -668,13 +745,20 @@ function ProductsTab() {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground">
                     No products found. Add your first product to get started.
                   </td>
                 </tr>
               ) : (
                 products.map((product, index) => (
                   <tr key={product.id} className="border-t hover:bg-muted/30 transition-colors">
+                    <td className="p-4 w-28">
+                      {product.images && product.images.length > 0 ? (
+                        <img src={product.images[0].url} alt={product.name} className="w-20 h-20 object-cover rounded" />
+                      ) : (
+                        <div className="w-20 h-20 bg-muted/30 rounded flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                      )}
+                    </td>
                     <td className="p-4">
                       <div>
                         <p className="font-medium">{product.name}</p>

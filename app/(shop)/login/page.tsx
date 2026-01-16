@@ -125,7 +125,7 @@ export default function LoginPage() {
                       placeholder="Enter your full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="pl-10 h-12 glass-card border-0 focus-premium transition-all duration-200"
+                      className="pl-10 h-12 border border-gray-200 rounded-md bg-card/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
                     />
                   </div>
                 </div>
@@ -143,7 +143,7 @@ export default function LoginPage() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 glass-card border-0 focus-premium transition-all duration-200"
+                    className="pl-10 h-12 border border-gray-200 rounded-md bg-card/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
                     required
                   />
                 </div>
@@ -161,7 +161,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 h-12 glass-card border-0 focus-premium transition-all duration-200"
+                    className="pl-10 pr-10 h-12 border border-gray-200 rounded-md bg-card/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
                     required
                   />
                   <button
@@ -208,50 +208,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Divider */}
-            <div className="my-8 relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-xs text-muted-foreground font-medium">
-                OR TRY DEMO
-              </span>
-            </div>
-
-            {/* Demo Accounts */}
-            <div className="space-y-3">
-              <p className="text-xs text-center text-muted-foreground mb-3 font-medium">
-                Quick Demo Access
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEmail("admin@demo.com")
-                    setPassword("admin123")
-                    setMode("login")
-                  }}
-                  className="h-10 glass-card border-0 hover-lift shadow-premium text-xs font-medium"
-                >
-                  <User className="w-3 h-3 mr-1" />
-                  Admin Demo
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEmail("customer@demo.com")
-                    setPassword("customer123")
-                    setMode("login")
-                  }}
-                  className="h-10 glass-card border-0 hover-lift shadow-premium text-xs font-medium"
-                >
-                  <User className="w-3 h-3 mr-1" />
-                  Customer Demo
-                </Button>
-              </div>
-            </div>
+            <div className="my-6" />
 
             {/* Switch Mode */}
             <div className="mt-8 text-center">

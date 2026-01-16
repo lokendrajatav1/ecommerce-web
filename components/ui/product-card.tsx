@@ -2,11 +2,13 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Heart, ShoppingCart, Eye, Star, Zap } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 interface Product {
@@ -26,6 +28,7 @@ interface ProductCardProps {
   onToggleWishlist?: (productId: string) => void
   isInWishlist?: boolean
   className?: string
+  style?: React.CSSProperties
 }
 
 export function ProductCard({ 
@@ -33,11 +36,20 @@ export function ProductCard({
   onAddToCart, 
   onToggleWishlist, 
   isInWishlist = false,
-  className 
+  className,
+  style
 }: ProductCardProps) {
+  const router = useRouter()
   const [imageLoading, setImageLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [localInWishlist, setLocalInWishlist] = useState<boolean>(isInWishlist)
+
+  useEffect(() => {
+    setLocalInWishlist(isInWishlist)
+  }, [isInWishlist])
+
+  const isActiveWishlist = onToggleWishlist ? isInWishlist : localInWishlist
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -48,7 +60,61 @@ export function ProductCard({
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    onToggleWishlist?.(product.id)
+    if (onToggleWishlist) {
+      // optimistic toggle locally so UI updates even if parent doesn't immediately update props
+      setLocalInWishlist(prev => !prev)
+      onToggleWishlist(product.id)
+      return
+    }
+    toggleWishlistInternal()
+  }
+
+  async function toggleWishlistInternal() {
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      toast({ title: "Login required", description: "Please log in to manage wishlist", variant: "destructive" })
+      return
+    }
+
+    const willAdd = !localInWishlist
+    setLocalInWishlist(willAdd) // optimistic
+
+    try {
+      if (willAdd) {
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ productId: product.id }),
+        })
+        if (res.status === 401) {
+          setLocalInWishlist(!willAdd)
+          toast({ title: "Unauthorized", description: "Please sign in to manage wishlist", variant: "destructive" })
+          router.push("/login")
+          return
+        }
+        const json = await res.json()
+        if (!json.success) throw new Error(json.error || "Failed to add to wishlist")
+        toast({ title: "Added", description: "Added to wishlist" })
+      } else {
+        const res = await fetch(`/api/wishlist?productId=${product.id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.status === 401) {
+          setLocalInWishlist(!willAdd)
+          toast({ title: "Unauthorized", description: "Please sign in to manage wishlist", variant: "destructive" })
+          router.push("/login")
+          return
+        }
+        const json = await res.json()
+        if (!json.success) throw new Error(json.error || "Failed to remove from wishlist")
+        toast({ title: "Removed", description: "Removed from wishlist" })
+      }
+    } catch (err) {
+      console.error("Wishlist toggle error:", err)
+      setLocalInWishlist(!willAdd) // rollback
+      toast({ title: "Error", description: (err as any)?.message || "Wishlist update failed", variant: "destructive" })
+    }
   }
 
   const isOutOfStock = product.stock === 0
@@ -60,7 +126,7 @@ export function ProductCard({
       "group relative overflow-hidden glass-card hover-lift shadow-premium transition-all duration-500",
       isOutOfStock && "opacity-75",
       className
-    )}>
+    )} style={style}>
       <Link 
         href={`/product/${product.id}`} 
         className="block"
@@ -121,11 +187,11 @@ export function ProductCard({
                 variant="secondary"
                 className={cn(
                   "glass-card shadow-premium-lg hover-lift transition-all duration-300",
-                  isInWishlist ? "text-red-500 hover:text-red-600" : "text-white hover:text-red-500"
+                  isActiveWishlist ? "text-red-500 hover:text-red-600" : "text-white hover:text-red-500"
                 )}
                 onClick={handleToggleWishlist}
               >
-                <Heart className={cn("w-4 h-4", isInWishlist && "fill-current")} />
+                <Heart className="w-4 h-4" fill={isActiveWishlist ? "currentColor" : "none"} />
               </Button>
             </div>
           </div>
@@ -150,10 +216,24 @@ export function ProductCard({
             )}
           </div>
 
+          {/* Small wishlist button (always visible) */}
+          <div className="absolute top-3 right-3 z-10">
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleWishlist(e as any) }}
+              aria-label={localInWishlist || isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors",
+                isActiveWishlist ? "bg-red-50 text-red-600" : "bg-white/10 text-white hover:bg-white/20"
+              )}
+            >
+              <Heart className="w-4 h-4" fill={isActiveWishlist ? "currentColor" : "none"} />
+            </button>
+          </div>
+
           {/* Wishlist indicator */}
-          {isInWishlist && (
+          {isActiveWishlist && (
             <div className="absolute top-3 right-3">
-              <Heart className="w-5 h-5 text-red-500 fill-current animate-bounce-in shadow-premium" />
+              <Heart className="w-5 h-5 text-red-500 animate-bounce-in shadow-premium" fill="currentColor" />
             </div>
           )}
         </div>

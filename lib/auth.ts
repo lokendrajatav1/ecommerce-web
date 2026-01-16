@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import { prisma } from "./prisma"
 
-const ACCESS_TOKEN_EXPIRY = "15m"
+const ACCESS_TOKEN_EXPIRY = "4d" // 4 days
 const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 // 7 days in seconds
 
 export async function hashPassword(password: string): Promise<string> {

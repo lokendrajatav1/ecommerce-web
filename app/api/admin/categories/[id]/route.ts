@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
       const category = await prisma.category.update({
         where: { id },
-        data: { name, slug, description },
+        data: { name, slug },
       })
 
       return NextResponse.json({ success: true, data: category } as ApiResponse)

@@ -20,7 +20,7 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
       return NextResponse.json({ success: false, error: "Invalid or expired token" }, { status: 401 })
     }
 
-    request.auth = auth
+    request.auth = auth as AuthPayload
     return handler(request)
   }
 }
@@ -43,7 +43,7 @@ export function withAdminAuth(handler: (req: AuthenticatedRequest) => Promise<Ne
       return NextResponse.json({ success: false, error: "Forbidden: Admin access required" }, { status: 403 })
     }
 
-    request.auth = auth
+    request.auth = auth as AuthPayload
     return handler(request)
   }
 }

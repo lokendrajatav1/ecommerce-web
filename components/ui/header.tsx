@@ -12,7 +12,6 @@ import {
   X, 
   LogOut, 
   Settings,
-  Heart,
   Search
 } from "lucide-react"
 import {
@@ -140,12 +139,7 @@ export function Header({ cartItemCount = 0 }: HeaderProps) {
                       Profile Settings
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/wishlist" className="flex items-center gap-2">
-                      <Heart className="w-4 h-4" />
-                      Wishlist
-                    </Link>
-                  </DropdownMenuItem>
+                  {/* Wishlist removed */}
                   {user.role === "ADMIN" && (
                     <>
                       <DropdownMenuSeparator />

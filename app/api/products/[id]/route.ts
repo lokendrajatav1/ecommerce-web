@@ -53,6 +53,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         include: { images: true, category: true },
       })
 
+      // If images array was provided, replace existing images
+      if (images && Array.isArray(images)) {
+        // remove existing images for the product
+        await prisma.productImage.deleteMany({ where: { productId: id } })
+        if (images.length > 0) {
+          // create new image records
+          await prisma.productImage.createMany({
+            data: images.map((url: string) => ({ url, productId: id })),
+          })
+        }
+
+        // reload product with images
+        const refreshed = await prisma.product.findUnique({
+          where: { id },
+          include: { images: true, category: true },
+        })
+        return NextResponse.json({ success: true, data: refreshed } as ApiResponse)
+      }
+
       return NextResponse.json({ success: true, data: product } as ApiResponse)
     } catch (error) {
       console.error("Update product error:", error)

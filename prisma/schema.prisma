@@ -8,6 +8,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+ 
 }
 
 model User {
@@ -22,6 +23,7 @@ model User {
   refreshTokens RefreshToken[]
   cart          Cart?
   orders        Order[]
+  wishlistItems WishlistItem[]
   
   @@index([email])
 }
@@ -63,6 +65,7 @@ model Product {
   images      ProductImage[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
+  wishlistItems WishlistItem[]
   
   @@index([categoryId])
   @@index([price])
@@ -75,6 +78,19 @@ model ProductImage {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   
+  @@index([productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
   @@index([productId])
 }
 
