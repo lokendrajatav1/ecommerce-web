@@ -21,8 +21,10 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // Calculate total
-      const total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+    // Calculate total
+      const total = cart.items.reduce((sum: number, item: typeof cart.items[number]) => {
+        return sum + item.product.price * item.quantity
+      }, 0)
 
       return NextResponse.json({ success: true, data: { ...cart, total } } as ApiResponse)
     } catch (error) {
